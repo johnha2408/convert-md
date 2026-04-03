@@ -148,7 +148,7 @@
   .btn-sm { padding: 5px 11px; font-size: 12px; }
 
   /* DOCS PREVIEW */
-  .docs-preview { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; min-height: 100%; }
+  .docs-preview { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
 
   .docs-toolbar {
     background: var(--surface2); padding: 10px 16px;
@@ -160,7 +160,7 @@
 
   .doc-content {
     padding: 36px 44px; font-family: Arial, sans-serif;
-    line-height: 1.8; color: var(--text);
+    line-height: 1.8; color: var(--text); overflow: visible;
   }
 
   .doc-content::-webkit-scrollbar { width: 4px; }
@@ -426,7 +426,7 @@
   .highlight { background: rgba(200,240,78,0.2); border-radius: 3px; padding: 0 2px; }
 
   .page-view { display: none; height: 100%; overflow-y: auto; padding: 22px; }
-  .page-view.active { display: flex; flex-direction: column; }
+  .page-view.active { display: block; overflow-y: auto; }
   .page-view::-webkit-scrollbar { width: 4px; }
   .page-view::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
