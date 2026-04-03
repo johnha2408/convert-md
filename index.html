@@ -158,6 +158,75 @@
 
   .docs-toolbar .dot { width: 10px; height: 10px; border-radius: 50%; }
 
+  /* DOC SECTION CHECKBOXES */
+  .doc-section-row {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    transition: opacity 0.2s;
+  }
+
+  /* Give the row the same top margin as the heading it wraps */
+  .doc-section-row:has(h2) { margin-top: 32px; }
+  .doc-section-row:has(h3) { margin-top: 22px; }
+  .doc-section-row:has(h1) { margin-bottom: 22px; }
+
+  .doc-section-row.done > h1,
+  .doc-section-row.done > h2,
+  .doc-section-row.done > h3 {
+    text-decoration: line-through;
+    opacity: 0.38;
+  }
+
+  /* h2 special: override the ::before bar */
+  .doc-section-row.done > h2::before { opacity: 0.38; }
+
+  /* Section content dimming handled by JS, not CSS */
+  .doc-section-content.dimmed {
+    opacity: 0.3;
+    transition: opacity 0.2s;
+  }
+
+  .doc-section-row > h1,
+  .doc-section-row > h2,
+  .doc-section-row > h3 { flex: 1; margin: 0; }
+
+  .doc-chk {
+    width: 20px; height: 20px; border-radius: 5px;
+    border: 1.5px solid var(--border);
+    background: transparent; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: transparent;
+    transition: all 0.15s; flex-shrink: 0;
+    margin-top: 6px; margin-left: 10px;
+  }
+
+  .doc-chk:hover { border-color: var(--accent); background: rgba(200,240,78,0.1); color: var(--accent); }
+  .doc-chk.checked { background: var(--success); border-color: var(--success); color: #0e0e11; }
+
+  .doc-progress-bar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 9px 44px; background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px; color: var(--text-muted);
+    font-family: Arial, sans-serif; font-weight: 700;
+    letter-spacing: 0.5px; text-transform: uppercase; flex-shrink: 0;
+  }
+
+  .doc-progress-track {
+    flex: 1; height: 4px; background: var(--border);
+    border-radius: 2px; overflow: hidden;
+  }
+
+  .doc-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    border-radius: 2px; transition: width 0.35s ease;
+  }
+
   .doc-content {
     padding: 36px 44px; font-family: Arial, sans-serif;
     line-height: 1.8; color: var(--text); overflow: visible;
@@ -436,6 +505,60 @@
 
   #upload-input { display: none; }
 
+  /* SAVED DOCS SIDEBAR */
+  .saved-docs-bar {
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    display: flex; align-items: center; gap: 0;
+    flex-shrink: 0; overflow-x: auto; padding: 0 8px;
+    min-height: 38px;
+  }
+  .saved-docs-bar::-webkit-scrollbar { height: 3px; }
+  .saved-docs-bar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .saved-tab {
+    display: flex; align-items: center; gap: 6px;
+    padding: 0 12px; height: 38px;
+    border-right: 1px solid var(--border);
+    cursor: pointer; white-space: nowrap;
+    font-size: 12px; font-family: Arial, sans-serif;
+    color: var(--text-muted); transition: all 0.15s;
+    position: relative; flex-shrink: 0;
+  }
+  .saved-tab:hover { background: var(--surface); color: var(--text); }
+  .saved-tab.active { background: var(--bg); color: var(--text); border-bottom: 2px solid var(--accent); }
+
+  .saved-tab .tab-name {
+    max-width: 120px; overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .saved-tab .tab-close {
+    width: 16px; height: 16px; border-radius: 4px;
+    border: none; background: transparent;
+    color: var(--text-dim); cursor: pointer;
+    font-size: 11px; display: flex; align-items: center;
+    justify-content: center; padding: 0;
+    transition: all 0.15s; flex-shrink: 0;
+  }
+  .saved-tab .tab-close:hover { background: rgba(255,95,95,0.2); color: var(--danger); }
+
+  .saved-tab-new {
+    padding: 0 12px; height: 38px;
+    border: none; background: transparent;
+    color: var(--text-dim); cursor: pointer;
+    font-size: 18px; display: flex; align-items: center;
+    transition: color 0.15s; flex-shrink: 0;
+  }
+  .saved-tab-new:hover { color: var(--accent); }
+
+  .save-indicator {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); flex-shrink: 0;
+    display: none;
+  }
+  .saved-tab.unsaved .save-indicator { display: block; }
+
   /* MODAL */
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.75);
@@ -502,10 +625,13 @@
       <span class="panel-title">📝 Markdown Input</span>
       <div style="display:flex;gap:8px;align-items:center;">
         <span class="char-count" id="char-count">0 chars</span>
+        <button class="btn btn-secondary btn-sm" onclick="saveCurrentDoc()" title="Save (Ctrl+S)">💾 Save</button>
         <button class="btn btn-secondary btn-sm" onclick="document.getElementById('upload-input').click()">📂 Upload .md</button>
         <input type="file" id="upload-input" accept=".md,.txt" onchange="handleFileUpload(event)">
       </div>
     </div>
+    <!-- SAVED DOCS TABS -->
+    <div class="saved-docs-bar" id="saved-docs-bar"></div>
     <div id="drop-zone" class="drop-zone" onclick="document.getElementById('upload-input').click()">
       <div class="icon">⬇️</div>
       <div>Drag & drop a .md file here, or click to browse</div>
@@ -534,6 +660,11 @@
           <div class="dot" style="background:#febc2e"></div>
           <div class="dot" style="background:#28c840"></div>
           <span style="font-size:11px;color:var(--text-dim);margin-left:auto;font-family:'Courier New',monospace;">document preview</span>
+        </div>
+        <div class="doc-progress-bar" id="doc-progress-bar" style="display:none;">
+          <span id="doc-progress-text">0 / 0 sections done</span>
+          <div class="doc-progress-track"><div class="doc-progress-fill" id="doc-progress-fill" style="width:0%"></div></div>
+          <span id="doc-progress-pct" style="color:var(--accent);min-width:32px;text-align:right;">0%</span>
         </div>
         <div class="doc-content" id="doc-content">
           <div style="text-align:center;padding:60px 20px;color:var(--text-dim);">
@@ -644,13 +775,126 @@ function onEditorChange(el) {
   if (currentMD.trim()) document.getElementById('drop-zone').style.display = 'none';
 }
 
+// Simple hash for caching checked state per document
+function docHash(str) {
+  let h = 0;
+  for (let i = 0; i < Math.min(str.length, 200); i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+  return h.toString(36);
+}
+
+let docCheckedState = {}; // { sectionKey: true/false }
+
 function renderPreview() {
   const el = document.getElementById('doc-content');
   if (!currentMD.trim()) {
     el.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--text-dim);"><div style="font-size:40px;margin-bottom:12px;">📝</div><p>Type markdown on the left to see a live preview</p></div>';
+    document.getElementById('doc-progress-bar').style.display = 'none';
     return;
   }
+
+  // Parse markdown
   el.innerHTML = marked.parse(currentMD);
+
+  // Inject checkboxes next to headings, wrap content between headings in divs
+  const headings = el.querySelectorAll('h1, h2, h3');
+  if (headings.length === 0) {
+    document.getElementById('doc-progress-bar').style.display = 'none';
+    return;
+  }
+
+  // Collect all top-level children as a flat array
+  const allNodes = Array.from(el.childNodes);
+
+  // Build sections: each section = { heading node, content nodes[] }
+  const sections = [];
+  let current = null;
+  allNodes.forEach(node => {
+    const tag = node.nodeName && node.nodeName.toLowerCase();
+    if (tag === 'h1' || tag === 'h2' || tag === 'h3') {
+      current = { heading: node, content: [] };
+      sections.push(current);
+    } else if (current) {
+      current.content.push(node);
+    }
+    // nodes before first heading: ignore (pre-content)
+  });
+
+  // Clear el and rebuild with wrapped structure
+  el.innerHTML = '';
+
+  sections.forEach((sec, i) => {
+    const h = sec.heading;
+    const key = 'h' + i + '_' + h.textContent.slice(0, 30).replace(/\s+/g, '_');
+    const isDone = docCheckedState[key] || false;
+
+    // Heading row (heading + checkbox)
+    const row = document.createElement('div');
+    row.className = 'doc-section-row' + (isDone ? ' done' : '');
+    row.dataset.key = key;
+
+    const chk = document.createElement('button');
+    chk.className = 'doc-chk' + (isDone ? ' checked' : '');
+    chk.textContent = '✓';
+    chk.title = isDone ? 'Mark as pending' : 'Mark section as done';
+    chk.setAttribute('aria-label', 'Toggle section done');
+
+    row.appendChild(h);
+    row.appendChild(chk);
+    el.appendChild(row);
+
+    // Content wrapper — only contains nodes between THIS heading and NEXT heading
+    if (sec.content.length > 0) {
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'doc-section-content' + (isDone ? ' dimmed' : '');
+      contentDiv.dataset.key = key;
+      sec.content.forEach(node => contentDiv.appendChild(node));
+      el.appendChild(contentDiv);
+
+      chk.onclick = (e) => {
+        e.stopPropagation();
+        toggleDocSection(key, row, chk, contentDiv);
+      };
+    } else {
+      chk.onclick = (e) => {
+        e.stopPropagation();
+        toggleDocSection(key, row, chk, null);
+      };
+    }
+  });
+
+  updateDocProgress();
+  document.getElementById('doc-progress-bar').style.display = '';
+}
+
+function toggleDocSection(key, row, chk, contentDiv) {
+  const isDone = !docCheckedState[key];
+  docCheckedState[key] = isDone;
+
+  if (isDone) {
+    row.classList.add('done');
+    chk.classList.add('checked');
+    chk.title = 'Mark as pending';
+    if (contentDiv) contentDiv.classList.add('dimmed');
+  } else {
+    row.classList.remove('done');
+    chk.classList.remove('checked');
+    chk.title = 'Mark section as done';
+    if (contentDiv) contentDiv.classList.remove('dimmed');
+  }
+  chk.textContent = '✓';
+  updateDocProgress();
+}
+
+function updateDocProgress() {
+  const rows = document.querySelectorAll('.doc-section-row');
+  const total = rows.length;
+  if (total === 0) return;
+  const done = [...rows].filter(r => r.classList.contains('done')).length;
+  const pct = Math.round(done / total * 100);
+
+  document.getElementById('doc-progress-text').textContent = done + ' / ' + total + ' sections done';
+  document.getElementById('doc-progress-fill').style.width = pct + '%';
+  document.getElementById('doc-progress-pct').textContent = pct + '%';
 }
 
 // ─── FILE UPLOAD ─────────────────────────────────────────────────────────────
@@ -1257,6 +1501,176 @@ function showToast(type, msg) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
 }
+
+// ─── SAVED DOCS MANAGER ─────────────────────────────────────────────────────
+const STORAGE_KEY = 'markflow_saved_docs';
+let savedDocs = [];      // [{ id, name, content, savedAt, checkedState }]
+let activeDocId = null;
+let isUnsaved = false;
+
+function loadSavedDocs() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    savedDocs = raw ? JSON.parse(raw) : [];
+  } catch { savedDocs = []; }
+}
+
+function persistSavedDocs() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(savedDocs)); } catch {}
+}
+
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+function saveCurrentDoc() {
+  if (!currentMD.trim()) { showToast('error', '⚠️ Nothing to save'); return; }
+
+  if (activeDocId) {
+    // Update existing
+    const doc = savedDocs.find(d => d.id === activeDocId);
+    if (doc) {
+      doc.content = currentMD;
+      doc.savedAt = Date.now();
+      doc.checkedState = docCheckedState;
+      persistSavedDocs();
+      markSaved();
+      renderSavedTabs();
+      showToast('success', '💾 Saved: ' + doc.name);
+      return;
+    }
+  }
+
+  // New doc — prompt for name
+  const defaultName = currentMD.split('\n').find(l => l.trim().startsWith('# '))
+    ?.replace(/^#+\s*/, '').slice(0, 40) || 'Untitled ' + (savedDocs.length + 1);
+  const name = prompt('Name this document:', defaultName);
+  if (!name) return;
+
+  const doc = { id: genId(), name: name.trim(), content: currentMD, savedAt: Date.now(), checkedState: {} };
+  savedDocs.unshift(doc);
+  persistSavedDocs();
+  activeDocId = doc.id;
+  markSaved();
+  renderSavedTabs();
+  showToast('success', '💾 Saved: ' + doc.name);
+}
+
+function openSavedDoc(id) {
+  if (activeDocId === id) return;
+
+  // Save current unsaved changes first
+  if (isUnsaved && activeDocId) {
+    const doc = savedDocs.find(d => d.id === activeDocId);
+    if (doc) { doc.content = currentMD; doc.savedAt = Date.now(); persistSavedDocs(); }
+  }
+
+  const doc = savedDocs.find(d => d.id === id);
+  if (!doc) return;
+
+  activeDocId = doc.id;
+  currentMD = doc.content;
+  docCheckedState = doc.checkedState || {};
+  document.getElementById('md-editor').value = currentMD;
+  document.getElementById('char-count').textContent = currentMD.length + ' chars';
+  renderPreview();
+  document.getElementById('drop-zone').style.display = 'none';
+  markSaved();
+  renderSavedTabs();
+}
+
+function deleteSavedDoc(id, e) {
+  e.stopPropagation();
+  const doc = savedDocs.find(d => d.id === id);
+  if (!doc) return;
+  if (!confirm('Delete "' + doc.name + '"?')) return;
+
+  savedDocs = savedDocs.filter(d => d.id !== id);
+  persistSavedDocs();
+
+  if (activeDocId === id) {
+    activeDocId = null;
+    isUnsaved = false;
+  }
+  renderSavedTabs();
+  showToast('success', '🗑️ Deleted: ' + doc.name);
+}
+
+function renameDoc(id, e) {
+  e.stopPropagation();
+  const doc = savedDocs.find(d => d.id === id);
+  if (!doc) return;
+  const name = prompt('Rename:', doc.name);
+  if (!name || !name.trim()) return;
+  doc.name = name.trim();
+  persistSavedDocs();
+  renderSavedTabs();
+}
+
+function newDoc() {
+  if (isUnsaved && activeDocId) {
+    const doc = savedDocs.find(d => d.id === activeDocId);
+    if (doc) { doc.content = currentMD; doc.savedAt = Date.now(); persistSavedDocs(); }
+  }
+  activeDocId = null;
+  currentMD = '';
+  docCheckedState = {};
+  document.getElementById('md-editor').value = '';
+  document.getElementById('char-count').textContent = '0 chars';
+  document.getElementById('drop-zone').style.display = '';
+  renderPreview();
+  markSaved();
+  renderSavedTabs();
+}
+
+function markUnsaved() {
+  if (!isUnsaved) { isUnsaved = true; renderSavedTabs(); }
+}
+
+function markSaved() { isUnsaved = false; }
+
+function renderSavedTabs() {
+  const bar = document.getElementById('saved-docs-bar');
+  if (!bar) return;
+
+  let html = '';
+  savedDocs.forEach(function(doc) {
+    const isActive = doc.id === activeDocId;
+    const unsaved = isActive && isUnsaved;
+    const time = new Date(doc.savedAt).toLocaleDateString('en', { month: 'short', day: 'numeric' });
+    const cls = 'saved-tab' + (isActive ? ' active' : '') + (unsaved ? ' unsaved' : '');
+    html += '<div class="' + cls + '"'
+      + ' onclick="openSavedDoc(' + "'" + doc.id + "'" + ')"'
+      + ' ondblclick="renameDoc(' + "'" + doc.id + "'" + ', event)"'
+      + ' title="' + escHtml(doc.name) + ' - ' + time + ' (dblclick to rename)">'
+      + '<div class="save-indicator"></div>'
+      + '<span class="tab-name">' + escHtml(doc.name) + '</span>'
+      + '<button class="tab-close" onclick="deleteSavedDoc(' + "'" + doc.id + "'" + ', event)" title="Delete">✕</button>'
+      + '</div>';
+  });
+
+  html += '<button class="saved-tab-new" onclick="newDoc()" title="New document">+</button>';
+  bar.innerHTML = html;
+
+  if (activeDocId) {
+    const active = bar.querySelector('.saved-tab.active');
+    if (active) active.scrollIntoView({ inline: 'center', behavior: 'smooth' });
+  }
+}
+
+// Mark unsaved when editor changes
+const _origOnEditorChange = onEditorChange;
+function onEditorChange(el) {
+  _origOnEditorChange(el);
+  if (activeDocId) markUnsaved();
+}
+
+// Ctrl+S to save
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveCurrentDoc(); }
+});
+
+// Init
+loadSavedDocs();
+renderSavedTabs();
 
 // ─── SAMPLE DATA ─────────────────────────────────────────────────────────────
 const sample = `# GEO Strategy Plan — Q2 2025
