@@ -773,6 +773,10 @@ function onEditorChange(el) {
   document.getElementById('char-count').textContent = currentMD.length + ' chars';
   renderPreview();
   if (currentMD.trim()) document.getElementById('drop-zone').style.display = 'none';
+  // track unsaved state
+  if (typeof activeDocId !== 'undefined' && activeDocId) {
+    if (typeof markUnsaved === 'function') markUnsaved();
+  }
 }
 
 // Simple hash for caching checked state per document
@@ -904,10 +908,23 @@ function handleFileUpload(e) {
   const reader = new FileReader();
   reader.onload = ev => {
     currentMD = ev.target.result;
+    docCheckedState = {};
     document.getElementById('md-editor').value = currentMD;
     document.getElementById('char-count').textContent = currentMD.length + ' chars';
-    renderPreview();
     document.getElementById('drop-zone').style.display = 'none';
+    renderPreview();
+    // If no active doc, mark as unsaved new doc (named after file)
+    if (!activeDocId) {
+      const name = file.name.replace(/\.md$/i, '').replace(/[-_]/g, ' ').slice(0, 40);
+      const doc = { id: genId(), name, content: currentMD, savedAt: Date.now(), checkedState: {} };
+      savedDocs.unshift(doc);
+      persistSavedDocs();
+      activeDocId = doc.id;
+      isUnsaved = true;
+      renderSavedTabs();
+    } else {
+      if (typeof markUnsaved === 'function') markUnsaved();
+    }
     showToast('success', '✅ Loaded: ' + file.name);
   };
   reader.readAsText(file, 'UTF-8');
@@ -923,10 +940,22 @@ document.addEventListener('drop', e => {
     const reader = new FileReader();
     reader.onload = ev => {
       currentMD = ev.target.result;
+      docCheckedState = {};
       document.getElementById('md-editor').value = currentMD;
       document.getElementById('char-count').textContent = currentMD.length + ' chars';
-      renderPreview();
       document.getElementById('drop-zone').style.display = 'none';
+      renderPreview();
+      if (!activeDocId) {
+        const name = file.name.replace(/\.md$/i, '').replace(/[-_]/g, ' ').slice(0, 40);
+        const doc = { id: genId(), name, content: currentMD, savedAt: Date.now(), checkedState: {} };
+        savedDocs.unshift(doc);
+        persistSavedDocs();
+        activeDocId = doc.id;
+        isUnsaved = true;
+        renderSavedTabs();
+      } else {
+        if (typeof markUnsaved === 'function') markUnsaved();
+      }
       showToast('success', '✅ Loaded: ' + file.name);
     };
     reader.readAsText(file, 'UTF-8');
@@ -1656,12 +1685,7 @@ function renderSavedTabs() {
   }
 }
 
-// Mark unsaved when editor changes
-const _origOnEditorChange = onEditorChange;
-function onEditorChange(el) {
-  _origOnEditorChange(el);
-  if (activeDocId) markUnsaved();
-}
+// onEditorChange already handles unsaved tracking inline
 
 // Ctrl+S to save
 document.addEventListener('keydown', e => {
